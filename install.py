@@ -29,10 +29,11 @@ def install_requirements():
         "numpy>=1.21.0",
         "opencv-python>=4.5.3",
         "pillow>=9.0.0",
-        "scikit-learn>=0.24.2",
+        "scikit-learn==1.6.1",
         "joblib>=1.0.1",
         "matplotlib>=3.4.3",
-        "seaborn>=0.11.2"
+        "seaborn>=0.11.2",
+        "python-tk>=3.12.0"
     ]
     
     for package in requirements:
