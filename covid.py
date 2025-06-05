@@ -1,57 +1,108 @@
 import numpy as np
 import cv2
-import glob
-from sklearn.model_selection import train_test_split
-from sklearn.neural_network import MLPClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, recall_score, precision_score
+import tkinter as tk
+from tkinter import filedialog, messagebox
+from PIL import Image, ImageTk
+import joblib
+import os
 
-# Step 1: Data Preprocessing
-X = []
-y = []
+class COVIDPredictor:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("COVID-19 X-ray Predictor")
+        self.root.geometry("800x600")
+        
+        # Load models
+        self.load_models()
+        
+        # Create GUI elements
+        self.create_widgets()
+        
+    def load_models(self):
+        try:
+            self.rf_model = joblib.load('models/rf_model.joblib')
+            self.ann_model = joblib.load('models/ann_model.joblib')
+        except:
+            messagebox.showerror("Error", "Could not load models. Please run install.py first.")
+            self.root.destroy()
+            
+    def create_widgets(self):
+        # Title
+        title = tk.Label(self.root, text="COVID-19 X-ray Predictor", font=("Arial", 20))
+        title.pack(pady=20)
+        
+        # Image selection button
+        self.select_btn = tk.Button(self.root, text="Select X-ray Image", command=self.select_image)
+        self.select_btn.pack(pady=10)
+        
+        # Image preview
+        self.image_label = tk.Label(self.root)
+        self.image_label.pack(pady=10)
+        
+        # Analysis buttons
+        btn_frame = tk.Frame(self.root)
+        btn_frame.pack(pady=20)
+        
+        self.quick_btn = tk.Button(btn_frame, text="Quick Scan (Random Forest)", 
+                                 command=lambda: self.analyze_image('rf'))
+        self.quick_btn.pack(side=tk.LEFT, padx=10)
+        
+        self.detailed_btn = tk.Button(btn_frame, text="Detailed Analysis (Neural Network)", 
+                                    command=lambda: self.analyze_image('ann'))
+        self.detailed_btn.pack(side=tk.LEFT, padx=10)
+        
+        # Results
+        self.result_label = tk.Label(self.root, text="", font=("Arial", 14))
+        self.result_label.pack(pady=20)
+        
+    def select_image(self):
+        file_path = filedialog.askopenfilename(
+            filetypes=[("Image files", "*.png *.jpg *.jpeg")]
+        )
+        if file_path:
+            # Load and resize image for preview
+            image = Image.open(file_path)
+            image = image.resize((300, 300), Image.Resampling.LANCZOS)
+            photo = ImageTk.PhotoImage(image)
+            
+            self.image_label.configure(image=photo)
+            self.image_label.image = photo
+            
+            # Store the original image path
+            self.current_image_path = file_path
+            
+    def analyze_image(self, model_type):
+        if not hasattr(self, 'current_image_path'):
+            messagebox.showwarning("Warning", "Please select an image first!")
+            return
+            
+        # Load and preprocess image
+        image = cv2.imread(self.current_image_path, 0)
+        image = cv2.resize(image, (256, 256))
+        image = image.reshape(1, -1)
+        
+        # Make prediction
+        if model_type == 'rf':
+            model = self.rf_model
+            model_name = "Random Forest"
+        else:
+            model = self.ann_model
+            model_name = "Neural Network"
+            
+        prediction = model.predict(image)[0]
+        confidence = model.predict_proba(image)[0][prediction] * 100
+        
+        result = f"Model: {model_name}\n"
+        result += f"Prediction: {'COVID-19 Positive' if prediction == 1 else 'Normal'}\n"
+        result += f"Confidence: {confidence:.2f}%"
+        
+        self.result_label.configure(text=result)
 
-# Processing first class
-for file in glob.glob('/Users/unknown/Desktop/covid/COVID-19_Radiography_Dataset/Normal/images/*.png'):
-    images = cv2.imread(file, 0)
-    Resize_image = cv2.resize(images, dsize=(256, 256), interpolation=cv2.INTER_CUBIC)
-    Reshape_image = Resize_image.reshape(1, 256 * 256)
-    X.append(Reshape_image)
-    y.append(0)
+def main():
+    root = tk.Tk()
+    app = COVIDPredictor(root)
+    root.mainloop()
 
-# Processing second class
-for file in glob.glob('/Users/unknown/Desktop/covid/COVID-19_Radiography_Dataset/COVID/images/*.png'):
-    images = cv2.imread(file, 0)
-    Resize_image = cv2.resize(images, dsize=(256, 256), interpolation=cv2.INTER_CUBIC)
-    Reshape_image = Resize_image.reshape(1, 256 * 256)
-    X.append(Reshape_image)
-    y.append(1)
-
-X = np.array(X)
-X = X.reshape(X.shape[0], 256 * 256)
-
-y = np.array(y)
-y = y.reshape(y.shape[0], 1)
-
-# Step 2: Model Training
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
-
-# Using an Artificial Neural Network
-clf_ann = MLPClassifier(solver='adam', hidden_layer_sizes=(5, 2))
-clf_ann.fit(X_train, y_train)
-
-# Using a Random Forest Classifier
-clf_rf = RandomForestClassifier()
-clf_rf.fit(X_train, y_train)
-
-# Step 3: Model Evaluation
-Model_pred_test_ann = clf_ann.predict(X_test)
-Model_pred_test_rf = clf_rf.predict(X_test)
-
-print('ANN Test Accuracy Score:', accuracy_score(y_test, Model_pred_test_ann))
-print('ANN Test Precision Score:', precision_score(y_test, Model_pred_test_ann, average='weighted'))
-print('ANN Test Recall Score:', recall_score(y_test, Model_pred_test_ann, average='weighted'))
-
-print('RF Test Accuracy Score:', accuracy_score(y_test, Model_pred_test_rf))
-print('RF Test Precision Score:', precision_score(y_test, Model_pred_test_rf, average='weighted'))
-print('RF Test Recall Score:', recall_score(y_test, Model_pred_test_rf, average='weighted'))
+if __name__ == "__main__":
+    main()
 
