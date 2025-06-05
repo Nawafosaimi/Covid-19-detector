@@ -33,7 +33,7 @@ def copy_trained_models():
 def install_requirements():
     print("Installing required packages...")
     requirements = [
-        "numpy>=1.21.0",
+        "numpy==1.24.3",  # Specific version for compatibility
         "opencv-python>=4.5.3",
         "pillow>=9.0.0",
         "scikit-learn==1.6.1",  # Specific version to match the trained models
@@ -41,6 +41,10 @@ def install_requirements():
         "matplotlib>=3.4.3",
         "seaborn>=0.11.2"
     ]
+    
+    # First uninstall numpy and scikit-learn to avoid conflicts
+    print("Removing existing numpy and scikit-learn installations...")
+    subprocess.check_call([sys.executable, "-m", "pip", "uninstall", "-y", "numpy", "scikit-learn"])
     
     for package in requirements:
         print(f"Installing {package}...")
