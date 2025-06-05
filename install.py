@@ -33,10 +33,10 @@ def copy_trained_models():
 def install_requirements():
     print("Installing required packages...")
     requirements = [
-        "numpy==1.24.3",  # Specific version for compatibility
+        "numpy>=1.26.0",  # Updated for Python 3.12 compatibility
         "opencv-python>=4.5.3",
         "pillow>=9.0.0",
-        "scikit-learn==1.6.1",  # Specific version to match the trained models
+        "scikit-learn>=1.4.0",  # Updated for Python 3.12 compatibility
         "joblib>=1.0.1",
         "matplotlib>=3.4.3",
         "seaborn>=0.11.2"
