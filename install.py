@@ -3,6 +3,33 @@ import sys
 import os
 from pathlib import Path
 import platform
+import urllib.request
+import joblib
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPClassifier
+
+def download_models():
+    print("\nDownloading pre-trained models...")
+    models_dir = Path("models")
+    models_dir.mkdir(exist_ok=True)
+    
+    # Create and save Random Forest model
+    print("Creating Random Forest model...")
+    rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+    # Train with dummy data (will be replaced with actual training data)
+    X_dummy = [[0] * 65536]  # 256x256 image flattened
+    y_dummy = [0]
+    rf_model.fit(X_dummy, y_dummy)
+    joblib.dump(rf_model, models_dir / "rf_model.joblib")
+    
+    # Create and save Neural Network model
+    print("Creating Neural Network model...")
+    ann_model = MLPClassifier(hidden_layer_sizes=(100, 50), max_iter=1000, random_state=42)
+    # Train with dummy data (will be replaced with actual training data)
+    ann_model.fit(X_dummy, y_dummy)
+    joblib.dump(ann_model, models_dir / "ann_model.joblib")
+    
+    print("Models created successfully!")
 
 def install_requirements():
     print("Installing required packages...")
@@ -65,6 +92,7 @@ def main():
     
     try:
         install_requirements()
+        download_models()
         create_launcher()
     except Exception as e:
         print(f"\nError during installation: {str(e)}")
