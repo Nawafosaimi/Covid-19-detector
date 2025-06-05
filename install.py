@@ -5,6 +5,13 @@ from pathlib import Path
 import platform
 import shutil
 
+def check_tkinter():
+    try:
+        import tkinter
+        return True
+    except ImportError:
+        return False
+
 def copy_trained_models():
     print("\nCopying trained models...")
     # Source models directory (your trained models)
@@ -29,16 +36,29 @@ def install_requirements():
         "numpy>=1.21.0",
         "opencv-python>=4.5.3",
         "pillow>=9.0.0",
-        "scikit-learn==1.6.1",
+        "scikit-learn==1.6.1",  # Specific version to match the trained models
         "joblib>=1.0.1",
         "matplotlib>=3.4.3",
-        "seaborn>=0.11.2",
-        "python-tk>=3.12.0"
+        "seaborn>=0.11.2"
     ]
     
     for package in requirements:
         print(f"Installing {package}...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+    
+    # Check for Tkinter
+    if not check_tkinter():
+        print("\nTkinter is not installed. Please install it using your system package manager:")
+        system = platform.system()
+        if system == "Darwin":  # macOS
+            print("For macOS: brew install python-tk@3.12")
+        elif system == "Linux":
+            print("For Ubuntu/Debian: sudo apt-get install python3-tk")
+            print("For Fedora: sudo dnf install python3-tkinter")
+        elif system == "Windows":
+            print("For Windows: Tkinter should be included with Python installation")
+        print("\nAfter installing Tkinter, run this installation script again.")
+        sys.exit(1)
 
 def create_launcher():
     print("\nCreating launcher...")
