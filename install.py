@@ -42,23 +42,40 @@ def install_requirements():
     print("Removing existing packages...")
     subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", "numpy", "scikit-learn", "opencv-python", "joblib", "tqdm", "matplotlib", "seaborn"])
     
-    # Install packages using conda with exact versions
-    print("\nInstalling packages using conda...")
-    conda_packages = [
-        "numpy=1.21.0",
-        "scikit-learn=0.24.2",
-        "opencv=4.5.3",
-        "joblib=1.0.1",
-        "tqdm=4.62.3",
-        "matplotlib=3.4.3",
-        "seaborn=0.11.2"
+    # Install packages in a specific order with exact versions
+    print("\nInstalling packages...")
+    packages = [
+        "numpy==1.21.0",
+        "scipy==1.7.0",  # Required by scikit-learn
+        "scikit-learn==0.24.2",
+        "opencv-python==4.5.3",
+        "joblib==1.0.1",
+        "tqdm==4.62.3",
+        "matplotlib==3.4.3",
+        "seaborn==0.11.2"
     ]
     
-    for package in conda_packages:
+    for package in packages:
         print(f"Installing {package}...")
-        result = subprocess.run(["conda", "install", "-y", package], capture_output=True, text=True)
+        result = subprocess.run([sys.executable, "-m", "pip", "install", "--no-deps", package], capture_output=True, text=True)
         if result.returncode != 0:
             print(f"Error installing {package}:")
+            print(result.stderr)
+            return False
+    
+    # Install dependencies
+    print("\nInstalling dependencies...")
+    dependencies = [
+        "setuptools>=65.5.1",
+        "wheel>=0.38.4",
+        "Cython>=0.29.24"
+    ]
+    
+    for dep in dependencies:
+        print(f"Installing {dep}...")
+        result = subprocess.run([sys.executable, "-m", "pip", "install", dep], capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"Error installing {dep}:")
             print(result.stderr)
             return False
     
