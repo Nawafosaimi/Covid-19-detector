@@ -14,7 +14,7 @@ def check_tkinter():
     except ImportError:
         print("\nTkinter is not installed. Please install it using your system package manager:")
         print("\nFor macOS (using Homebrew):")
-        print("brew install python-tk@3.8")
+        print("brew install python-tk@3.9")
         print("\nFor Ubuntu/Debian:")
         print("sudo apt-get install python3-tk")
         print("\nFor Windows:")
@@ -22,20 +22,20 @@ def check_tkinter():
         return False
 
 def create_venv():
-    print("\nCreating Python 3.8 virtual environment...")
+    print("\nCreating Python 3.9 virtual environment...")
     venv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".venv")
     
-    # Check if Python 3.8 is installed
+    # Check if Python 3.9 is installed
     try:
-        subprocess.run(["python3.8", "--version"], check=True, capture_output=True)
+        subprocess.run(["python3.9", "--version"], check=True, capture_output=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
-        print("\nPython 3.8 is not installed. Please install it first:")
+        print("\nPython 3.9 is not installed. Please install it first:")
         if platform.system() == "Darwin":  # macOS
-            print("brew install python@3.8")
+            print("brew install python@3.9")
         elif platform.system() == "Linux":
-            print("sudo apt-get install python3.8 python3.8-venv")
+            print("sudo apt-get install python3.9 python3.9-venv")
         elif platform.system() == "Windows":
-            print("Download and install Python 3.8 from https://www.python.org/downloads/")
+            print("Download and install Python 3.9 from https://www.python.org/downloads/")
         sys.exit(1)
     
     # Create virtual environment
