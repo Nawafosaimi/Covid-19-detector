@@ -19,10 +19,28 @@ def check_tkinter():
         print("Tkinter should be included with Python installation")
         return False
 
+def verify_installation():
+    try:
+        import numpy
+        import sklearn
+        import cv2
+        import joblib
+        import tqdm
+        import matplotlib
+        import seaborn
+        print("\nVerification successful! All required packages are installed.")
+        return True
+    except ImportError as e:
+        print(f"\nError: {str(e)}")
+        print("Some packages were not installed correctly. Please try running the installation script again.")
+        return False
+
 def install_requirements():
     print("Installing required packages...")
+    
     # First uninstall existing versions to avoid conflicts
-    subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", "numpy", "scikit-learn"])
+    print("Removing existing packages...")
+    subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", "numpy", "scikit-learn", "opencv-python", "joblib", "tqdm", "matplotlib", "seaborn"])
     
     # Install specific versions that match the training environment
     requirements = [
@@ -35,11 +53,19 @@ def install_requirements():
         "seaborn==0.11.2"
     ]
     
+    print("\nInstalling packages...")
     for req in requirements:
-        subprocess.run([sys.executable, "-m", "pip", "install", req])
+        print(f"Installing {req}...")
+        result = subprocess.run([sys.executable, "-m", "pip", "install", req], capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"Error installing {req}:")
+            print(result.stderr)
+            return False
+    
+    return verify_installation()
 
 def copy_models():
-    print("Copying trained models...")
+    print("\nCopying trained models...")
     if not os.path.exists("models"):
         os.makedirs("models")
     
@@ -49,11 +75,12 @@ def copy_models():
         for file in os.listdir(src_models):
             if file.endswith(".joblib"):
                 shutil.copy2(os.path.join(src_models, file), os.path.join("models", file))
+                print(f"Copied {file}")
     else:
         print("Warning: Could not find original models directory")
 
 def create_launcher():
-    print("Creating launcher file...")
+    print("\nCreating launcher file...")
     with open("run_covid_detector.command", "w") as f:
         f.write("#!/bin/bash\n")
         f.write("cd \"$(dirname \"$0\")\"\n")
@@ -62,12 +89,19 @@ def create_launcher():
     os.chmod("run_covid_detector.command", 0o755)
 
 def main():
+    print("COVID-19 X-ray Predictor Installation")
+    print("=====================================")
+    
     if not check_tkinter():
         sys.exit(1)
     
-    install_requirements()
+    if not install_requirements():
+        print("\nInstallation failed. Please try running the script again.")
+        sys.exit(1)
+    
     copy_models()
     create_launcher()
+    
     print("\nInstallation completed successfully!")
     print("You can now run the application by double-clicking 'run_covid_detector.command'")
 
