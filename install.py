@@ -58,17 +58,17 @@ def install_requirements():
             print(result.stderr)
             return False
     
-    # Install packages in a specific order with exact versions
+    # Install packages in a specific order with versions compatible with Python 3.12
     print("\nInstalling packages...")
     packages = [
-        "numpy==1.21.0",
-        "scipy==1.7.0",  # Required by scikit-learn
-        "scikit-learn==0.24.2",
-        "opencv-python==4.5.3",
-        "joblib==1.0.1",
-        "tqdm==4.62.3",
-        "matplotlib==3.4.3",
-        "seaborn==0.11.2"
+        "numpy>=1.26.0",  # Compatible with Python 3.12
+        "scipy>=1.12.0",  # Required by scikit-learn, compatible with Python 3.12
+        "scikit-learn>=1.4.0",  # Compatible with Python 3.12
+        "opencv-python>=4.8.0",  # Compatible with Python 3.12
+        "joblib>=1.3.0",
+        "tqdm>=4.66.0",
+        "matplotlib>=3.8.0",
+        "seaborn>=0.13.0"
     ]
     
     for package in packages:
