@@ -42,6 +42,22 @@ def install_requirements():
     print("Removing existing packages...")
     subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", "numpy", "scikit-learn", "opencv-python", "joblib", "tqdm", "matplotlib", "seaborn"])
     
+    # Install setuptools and wheel first
+    print("\nInstalling build dependencies...")
+    build_deps = [
+        "setuptools>=65.5.1",
+        "wheel>=0.38.4",
+        "Cython>=0.29.24"
+    ]
+    
+    for dep in build_deps:
+        print(f"Installing {dep}...")
+        result = subprocess.run([sys.executable, "-m", "pip", "install", "--upgrade", dep], capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"Error installing {dep}:")
+            print(result.stderr)
+            return False
+    
     # Install packages in a specific order with exact versions
     print("\nInstalling packages...")
     packages = [
@@ -57,25 +73,10 @@ def install_requirements():
     
     for package in packages:
         print(f"Installing {package}...")
-        result = subprocess.run([sys.executable, "-m", "pip", "install", "--no-deps", package], capture_output=True, text=True)
+        # Use --only-binary=:all: to force using pre-built wheels
+        result = subprocess.run([sys.executable, "-m", "pip", "install", "--only-binary=:all:", package], capture_output=True, text=True)
         if result.returncode != 0:
             print(f"Error installing {package}:")
-            print(result.stderr)
-            return False
-    
-    # Install dependencies
-    print("\nInstalling dependencies...")
-    dependencies = [
-        "setuptools>=65.5.1",
-        "wheel>=0.38.4",
-        "Cython>=0.29.24"
-    ]
-    
-    for dep in dependencies:
-        print(f"Installing {dep}...")
-        result = subprocess.run([sys.executable, "-m", "pip", "install", dep], capture_output=True, text=True)
-        if result.returncode != 0:
-            print(f"Error installing {dep}:")
             print(result.stderr)
             return False
     
