@@ -1,120 +1,75 @@
-import subprocess
-import sys
 import os
-from pathlib import Path
-import platform
+import sys
 import shutil
+import subprocess
+import tkinter as tk
+from tkinter import messagebox
 
 def check_tkinter():
     try:
         import tkinter
         return True
     except ImportError:
+        print("\nTkinter is not installed. Please install it using your system package manager:")
+        print("\nFor macOS (using Homebrew):")
+        print("brew install python-tk@3.12")
+        print("\nFor Ubuntu/Debian:")
+        print("sudo apt-get install python3-tk")
+        print("\nFor Windows:")
+        print("Tkinter should be included with Python installation")
         return False
-
-def copy_trained_models():
-    print("\nCopying trained models...")
-    # Source models directory (your trained models)
-    source_dir = Path("../COVID-19-Detection-Using-Chest-X-ray-Images/models")
-    # Destination models directory
-    dest_dir = Path("models")
-    dest_dir.mkdir(exist_ok=True)
-    
-    # Copy the models
-    try:
-        shutil.copy2(source_dir / "rf_model.joblib", dest_dir / "rf_model.joblib")
-        shutil.copy2(source_dir / "ann_model.joblib", dest_dir / "ann_model.joblib")
-        print("Models copied successfully!")
-    except Exception as e:
-        print(f"Error copying models: {str(e)}")
-        print("Please make sure the trained models exist in the correct location.")
-        sys.exit(1)
 
 def install_requirements():
     print("Installing required packages...")
+    # First uninstall existing versions to avoid conflicts
+    subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", "numpy", "scikit-learn"])
+    
+    # Install specific versions that match the training environment
     requirements = [
-        "numpy>=1.26.0",  # Updated for Python 3.12 compatibility
-        "opencv-python>=4.5.3",
-        "pillow>=9.0.0",
-        "scikit-learn>=1.4.0",  # Updated for Python 3.12 compatibility
-        "joblib>=1.0.1",
-        "matplotlib>=3.4.3",
-        "seaborn>=0.11.2"
+        "numpy==1.21.0",
+        "opencv-python==4.5.3",
+        "scikit-learn==0.24.2",
+        "joblib==1.0.1",
+        "tqdm==4.62.3",
+        "matplotlib==3.4.3",
+        "seaborn==0.11.2"
     ]
     
-    # First uninstall numpy and scikit-learn to avoid conflicts
-    print("Removing existing numpy and scikit-learn installations...")
-    subprocess.check_call([sys.executable, "-m", "pip", "uninstall", "-y", "numpy", "scikit-learn"])
+    for req in requirements:
+        subprocess.run([sys.executable, "-m", "pip", "install", req])
+
+def copy_models():
+    print("Copying trained models...")
+    if not os.path.exists("models"):
+        os.makedirs("models")
     
-    for package in requirements:
-        print(f"Installing {package}...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-    
-    # Check for Tkinter
-    if not check_tkinter():
-        print("\nTkinter is not installed. Please install it using your system package manager:")
-        system = platform.system()
-        if system == "Darwin":  # macOS
-            print("For macOS: brew install python-tk@3.12")
-        elif system == "Linux":
-            print("For Ubuntu/Debian: sudo apt-get install python3-tk")
-            print("For Fedora: sudo dnf install python3-tkinter")
-        elif system == "Windows":
-            print("For Windows: Tkinter should be included with Python installation")
-        print("\nAfter installing Tkinter, run this installation script again.")
-        sys.exit(1)
+    # Copy models from the original training directory
+    src_models = os.path.join("..", "COVID-19-Detection-Using-Chest-X-ray-Images", "models")
+    if os.path.exists(src_models):
+        for file in os.listdir(src_models):
+            if file.endswith(".joblib"):
+                shutil.copy2(os.path.join(src_models, file), os.path.join("models", file))
+    else:
+        print("Warning: Could not find original models directory")
 
 def create_launcher():
-    print("\nCreating launcher...")
-    # Get the current directory
-    current_dir = Path(__file__).parent.absolute()
+    print("Creating launcher file...")
+    with open("run_covid_detector.command", "w") as f:
+        f.write("#!/bin/bash\n")
+        f.write("cd \"$(dirname \"$0\")\"\n")
+        f.write("python covid.py\n")
     
-    # Create launcher based on platform
-    system = platform.system()
-    
-    if system == "Windows":
-        # Create Windows batch file
-        launcher_path = current_dir / "COVID-19_Predictor.bat"
-        launcher_content = f"""@echo off
-cd /d "{current_dir}"
-python covid.py
-pause
-"""
-    else:
-        # Create Unix-like shell script
-        launcher_path = current_dir / "COVID-19_Predictor.command"
-        launcher_content = f"""#!/bin/bash
-cd "$(dirname "$0")"
-python covid.py
-"""
-    
-    # Write the launcher script
-    with open(launcher_path, "w") as f:
-        f.write(launcher_content)
-    
-    # Make it executable on Unix-like systems
-    if system != "Windows":
-        os.chmod(launcher_path, 0o755)
-    
-    print(f"\nInstallation complete! You can now run the application by:")
-    if system == "Windows":
-        print(f"1. Double-clicking 'COVID-19_Predictor.bat' in this folder")
-    else:
-        print(f"1. Double-clicking 'COVID-19_Predictor.command' in this folder")
-    print(f"2. Or running 'python covid.py' from the terminal")
+    os.chmod("run_covid_detector.command", 0o755)
 
 def main():
-    print("COVID-19 X-ray Predictor Installation")
-    print("=====================================")
-    
-    try:
-        install_requirements()
-        copy_trained_models()
-        create_launcher()
-    except Exception as e:
-        print(f"\nError during installation: {str(e)}")
-        print("Please contact technical support.")
+    if not check_tkinter():
         sys.exit(1)
+    
+    install_requirements()
+    copy_models()
+    create_launcher()
+    print("\nInstallation completed successfully!")
+    print("You can now run the application by double-clicking 'run_covid_detector.command'")
 
 if __name__ == "__main__":
     main() 
